@@ -449,7 +449,6 @@
       <div class="tabs">
         <button id="tabCalendar" class="active" onclick="setTab('calendar')">🐾 日期查班</button>
         <button id="tabMaids" onclick="setTab('maids')">🎀 女僕查班</button>
-        <button id="tabAdmin" onclick="setTab('admin')">⚙ 線上資料設定</button>
       </div>
       <div class="month-ctrl">
         <button onclick="moveMonth(-1)" aria-label="上個月">‹ 上月</button>
@@ -529,7 +528,7 @@
       </div>
     </section>
 
-    <div class="footer">Made with ♡ for MOFU｜Google Sheet 即時查班示範｜班表請以店家公告為準</div>
+    <div class="footer">Made with ♡ for MOFU｜Google Sheet 線上出勤查詢｜班表請以店家公告為準<div id="publicSyncState" aria-live="polite" style="margin-top:8px;font-size:12px"></div></div>
   </main>
 
   <script>
@@ -601,14 +600,14 @@
     function getShifts(dateStr){ return data.shifts.filter(x => x.date === dateStr); }
     function dateName(dateStr){ const d = parseDate(dateStr); return `${d.getMonth()+1}月${d.getDate()}日（週${weekdays[d.getDay()]}）`; }
 
-    function setTab(tab){ currentTab = tab; render(); }
+    function setTab(tab){ currentTab = tab === 'maids' ? 'maids' : 'calendar'; render(); }
     function moveMonth(offset){ const d = new Date(year, month + offset, 1); year = d.getFullYear(); month = d.getMonth(); render(); }
     function goToday(){ year = today.getFullYear(); month = today.getMonth(); selected = formatDate(today); render(); }
     function chooseDate(dateStr){ const d = parseDate(dateStr); year = d.getFullYear(); month = d.getMonth(); selected = dateStr; render(); }
     function selectMaid(name){ selectedMaid = decodeURIComponent(name); render(); }
 
     function render(){
-      ['calendar','maids','admin'].forEach(tab => {
+      ['calendar','maids'].forEach(tab => {
         document.getElementById(tab + 'Page').classList.toggle('hidden', currentTab !== tab);
         document.getElementById('tab' + tab[0].toUpperCase() + tab.slice(1)).classList.toggle('active', currentTab === tab);
       });
@@ -710,6 +709,8 @@
       const bar=document.getElementById('statusBar');
       bar.className=`status-bar show ${type}`;
       bar.textContent=message;
+      const pub=document.getElementById('publicSyncState');
+      if(pub){ pub.textContent = type === 'ok' ? '✓ 班表已同步' : type === 'warn' ? '⚠ 班表同步異常，請稍後再試' : ''; }
     }
     function validSheetUrl(raw){
       try{
