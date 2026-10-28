@@ -1,0 +1,868 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>沫芙 MOFU｜女僕出勤手帳</title>
+  <style>
+    :root{
+      --bg:#dfd8cf;
+      --paper:#f8f3eb;
+      --paper-2:#fcf8f1;
+      --ink:#6e4d41;
+      --ink-soft:#8f6d61;
+      --line:#b78f82;
+      --line-light:#d4beb5;
+      --accent:#c8a394;
+      --accent-2:#ead8ce;
+      --shadow:0 16px 40px rgba(107,78,67,.12);
+      --danger:#a86a6a;
+      --ok:#7f9578;
+    }
+    *{box-sizing:border-box}
+    html,body{margin:0;padding:0}
+    body{
+      font-family:"Noto Sans TC", "PingFang TC", "Microsoft JhengHei", system-ui, sans-serif;
+      background:var(--bg);
+      color:var(--ink);
+      min-height:100vh;
+      line-height:1.55;
+    }
+    .page{
+      max-width:1200px;
+      margin:24px auto;
+      background:linear-gradient(180deg,var(--paper-2),var(--paper));
+      border:2px solid var(--line-light);
+      border-radius:18px;
+      position:relative;
+      padding:26px 26px 30px;
+      box-shadow:var(--shadow);
+      overflow:hidden;
+    }
+    .page:before,.page:after{
+      content:"";
+      position:absolute;
+      inset:16px;
+      border:2px solid rgba(183,143,130,.45);
+      border-radius:14px;
+      pointer-events:none;
+    }
+    .corner{
+      position:absolute;
+      color:var(--line);
+      font-size:30px;
+      line-height:1;
+      opacity:.95;
+      pointer-events:none;
+    }
+    .corner.tl{left:20px;top:18px}
+    .corner.tr{right:20px;top:18px}
+    .corner.bl{left:20px;bottom:18px}
+    .corner.br{right:20px;bottom:18px}
+
+    .top-ribbon{
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      gap:14px;
+      color:var(--line);
+      font-size:24px;
+      margin:2px 0 10px;
+      letter-spacing:.08em;
+    }
+    .top-ribbon .line{
+      height:2px;
+      background:linear-gradient(90deg,transparent,var(--line),transparent);
+      flex:1;
+      max-width:240px;
+    }
+    .brand-wrap{
+      text-align:center;
+      padding:4px 10px 22px;
+      position:relative;
+    }
+    .brand-box{
+      display:inline-block;
+      position:relative;
+      padding:28px 36px 22px;
+      border:2px solid rgba(183,143,130,.65);
+      border-radius:40px;
+      background:rgba(255,255,255,.24);
+      min-width:min(90%,540px);
+    }
+    .brand-box:before,.brand-box:after{
+      content:"✦";
+      position:absolute;
+      top:-18px;
+      color:var(--line);
+      font-size:28px;
+    }
+    .brand-box:before{left:50%;transform:translateX(-50%)}
+    .brand-box:after{display:none}
+    .ears{
+      display:flex;
+      justify-content:center;
+      gap:210px;
+      margin-bottom:-10px;
+      font-size:34px;
+      color:var(--line);
+    }
+    .logo{
+      font-family:Georgia, "Times New Roman", serif;
+      font-size:70px;
+      font-weight:700;
+      line-height:1;
+      letter-spacing:.03em;
+      color:#8e6b5d;
+      text-shadow:0 1px 0 #fff;
+    }
+    .logo .o{color:#b89486}
+    .sublogo{
+      font-family:Georgia, serif;
+      font-style:italic;
+      font-size:26px;
+      margin-top:6px;
+      color:#704d40;
+    }
+    .tagline{
+      font-size:14px;
+      color:var(--ink-soft);
+      margin-top:8px;
+      letter-spacing:.12em;
+    }
+
+    .menu-ribbon{
+      margin:18px auto 22px;
+      width:min(100%,460px);
+      text-align:center;
+      position:relative;
+      padding:14px 26px;
+      border:2px solid rgba(183,143,130,.75);
+      border-radius:999px;
+      background:linear-gradient(180deg,#fffaf5,#f1e7dd);
+      box-shadow:0 8px 20px rgba(122,90,79,.10);
+      font-size:38px;
+      font-weight:900;
+      letter-spacing:.12em;
+      color:#8c685a;
+    }
+    .menu-ribbon:before,.menu-ribbon:after{
+      content:"🐾";
+      position:absolute;
+      top:50%;transform:translateY(-50%);
+      font-size:24px;
+      opacity:.75;
+    }
+    .menu-ribbon:before{left:18px}
+    .menu-ribbon:after{right:18px}
+
+    .welcome-note{
+      text-align:center;
+      color:var(--ink-soft);
+      margin:0 auto 22px;
+      max-width:760px;
+      font-size:15px;
+    }
+
+    .toolbar{
+      display:flex;
+      flex-wrap:wrap;
+      align-items:center;
+      justify-content:space-between;
+      gap:14px;
+      margin-bottom:16px;
+    }
+    .tabs,.month-ctrl,.admin-actions,.inline-actions,.quick-actions{
+      display:flex;
+      gap:8px;
+      flex-wrap:wrap;
+      align-items:center;
+    }
+    button,input,select,textarea{font:inherit}
+    button,.btn{
+      border:1.5px solid var(--line-light);
+      background:#fffdf9;
+      color:var(--ink);
+      padding:10px 14px;
+      border-radius:12px;
+      cursor:pointer;
+      transition:.18s ease;
+      box-shadow:0 4px 10px rgba(102,74,64,.05);
+    }
+    button:hover,.btn:hover{transform:translateY(-1px);border-color:var(--line)}
+    .active,.primary{
+      background:linear-gradient(180deg,#af8a7b,#9b7567);
+      color:#fff;
+      border-color:#9b7567;
+    }
+    .ghost{background:transparent}
+    .danger{background:#fff6f6;border-color:#dcb6b6;color:#946464}
+    .success{background:#f7fbf4;border-color:#c7d7c0;color:#6c8465}
+    .small{font-size:12px;padding:7px 10px;border-radius:10px}
+
+    .panel-grid{
+      display:grid;
+      grid-template-columns:1.25fr .8fr;
+      gap:18px;
+    }
+    .card{
+      background:rgba(255,255,255,.55);
+      border:1.5px solid #e6d6cb;
+      border-radius:20px;
+      padding:18px;
+      box-shadow:0 10px 24px rgba(110,77,65,.06);
+      position:relative;
+    }
+    .card-title{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:12px;
+      margin-bottom:14px;
+      flex-wrap:wrap;
+    }
+    .card-title h2,.card-title h3{margin:0;font-size:20px}
+    .muted{color:var(--ink-soft)}
+    .hint{font-size:13px}
+
+    .week-head,.calendar{
+      display:grid;
+      grid-template-columns:repeat(7,minmax(0,1fr));
+      gap:8px;
+    }
+    .week-head{
+      margin-bottom:10px;
+      text-align:center;
+      font-size:13px;
+      color:var(--ink-soft);
+      font-weight:700;
+    }
+    .day{
+      min-height:118px;
+      border:1.5px solid #eaded5;
+      border-radius:16px;
+      background:rgba(255,255,255,.76);
+      padding:9px;
+      text-align:left;
+      display:flex;
+      flex-direction:column;
+      gap:7px;
+      transition:.18s ease;
+    }
+    .day:hover{border-color:var(--line);background:#fff}
+    .day.out{opacity:.45}
+    .day.closed{background:#f5efea}
+    .day.selected{outline:2px solid #a68273;outline-offset:-2px;background:#fff}
+    .daynum{font-weight:800;font-size:14px}
+    .date-pill{
+      display:inline-flex;
+      align-items:center;
+      gap:6px;
+      background:#f3ebe5;
+      color:#84685d;
+      padding:4px 9px;
+      border-radius:999px;
+      font-size:11px;
+      width:max-content;
+    }
+    .mini-tags{display:flex;flex-wrap:wrap;gap:5px}
+    .tag{
+      display:inline-block;
+      padding:4px 7px;
+      border-radius:999px;
+      background:#f3e0d5;
+      color:#7d5d51;
+      font-size:11px;
+      white-space:nowrap;
+      max-width:100%;overflow:hidden;text-overflow:ellipsis;
+    }
+    .tag.alt{background:#efe6dd}
+    .tag.neutral{background:#eee9e4;color:#8d827d}
+
+    .detail-list{display:grid;gap:12px}
+    .shift-row{
+      display:flex;
+      gap:12px;
+      align-items:flex-start;
+      padding:13px 0;
+      border-bottom:1px dashed #e3d3c9;
+    }
+    .shift-row:last-child{border-bottom:none}
+    .clock{
+      min-width:118px;
+      font-weight:800;
+      color:#8f6c5f;
+      font-size:13px;
+    }
+    .clock span{display:block;font-weight:500;color:var(--ink-soft);margin-top:2px}
+    .chips{display:flex;flex-wrap:wrap;gap:8px}
+    .chip{
+      padding:6px 10px;
+      border-radius:999px;
+      background:#fbf1ea;
+      color:#7c584b;
+      font-size:13px;
+      border:1px solid #eedfd5;
+    }
+    .empty{
+      padding:22px 10px;
+      text-align:center;
+      color:var(--ink-soft);
+      font-size:14px;
+    }
+
+    .maids{
+      display:grid;
+      grid-template-columns:repeat(auto-fill,minmax(180px,1fr));
+      gap:12px;
+    }
+    .maid-card{
+      width:100%;
+      text-align:left;
+      padding:16px;
+      border-radius:18px;
+      border:1.5px solid #ead9cf;
+      background:linear-gradient(180deg,#fffefb,#f8f1eb);
+    }
+    .maid-card strong{display:block;font-size:20px;margin-bottom:4px}
+    .maid-card span{font-size:13px;color:var(--ink-soft)}
+    .persondays{display:grid;gap:10px}
+    .personday{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:10px;
+      padding:14px;
+      border-radius:16px;
+      background:#fffaf5;
+      border:1px solid #eee1d7;
+      flex-wrap:wrap;
+    }
+
+    .admin-shell{display:grid;gap:16px}
+    .auth-box,.admin-box{border:1px dashed #dbc7bc;border-radius:18px;padding:16px;background:#fff9f4}
+    .auth-row,.form-grid{display:grid;gap:12px}
+    .auth-row{grid-template-columns:1.1fr auto auto}
+    .form-grid{grid-template-columns:repeat(3,minmax(0,1fr))}
+    .field{display:flex;flex-direction:column;gap:6px;font-size:13px}
+    input,select,textarea{
+      width:100%;
+      padding:10px 12px;
+      border:1.5px solid #e3d4ca;
+      border-radius:12px;
+      background:#fff;
+      color:var(--ink);
+    }
+    .records{max-height:320px;overflow:auto;display:grid;gap:8px}
+    .record{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:10px;
+      padding:12px;
+      border-radius:14px;
+      border:1px solid #efe1d7;
+      background:#fff;
+      flex-wrap:wrap;
+    }
+    .note{
+      padding:12px 14px;
+      border-radius:14px;
+      background:#f8f1ea;
+      border:1px solid #ead7c9;
+      color:#87695d;
+      font-size:13px;
+    }
+    .status-bar{
+      padding:10px 14px;
+      border-radius:12px;
+      font-size:13px;
+      margin-top:10px;
+      display:none;
+    }
+    .status-bar.show{display:block}
+    .status-bar.ok{background:#eef6ea;color:#667d60;border:1px solid #cbdcc5}
+    .status-bar.warn{background:#fbf0ee;color:#92675c;border:1px solid #e6cbc3}
+    .status-bar.info{background:#f4f0eb;color:#81685c;border:1px solid #e3d3c9}
+    .footer{
+      text-align:center;
+      margin-top:24px;
+      color:#977b70;
+      font-size:12px;
+      letter-spacing:.04em;
+    }
+    .hidden{display:none !important}
+
+    @media (max-width: 900px){
+      .panel-grid{grid-template-columns:1fr}
+      .form-grid{grid-template-columns:1fr 1fr}
+      .auth-row{grid-template-columns:1fr}
+      .logo{font-size:54px}
+      .menu-ribbon{font-size:28px}
+      .day{min-height:98px}
+    }
+    @media (max-width: 640px){
+      .page{margin:0;padding:16px 14px 24px;border-radius:0}
+      .page:before,.page:after{inset:10px}
+      .toolbar{align-items:flex-start}
+      .week-head,.calendar{gap:6px}
+      .day{padding:7px;min-height:84px}
+      .mini-tags{gap:4px}
+      .tag{font-size:10px;padding:3px 6px}
+      .form-grid{grid-template-columns:1fr}
+      .brand-box{padding:22px 16px 18px;min-width:100%}
+      .logo{font-size:44px}
+      .sublogo{font-size:22px}
+      .menu-ribbon{font-size:24px;width:100%}
+      .corner{font-size:24px}
+      .ears{gap:120px;font-size:28px}
+      .clock{min-width:96px}
+    }
+  </style>
+</head>
+<body>
+  <main class="page">
+    <div class="corner tl">🐾</div>
+    <div class="corner tr">🐾</div>
+    <div class="corner bl">🐾</div>
+    <div class="corner br">🐾</div>
+
+    <div class="top-ribbon">
+      <div class="line"></div>
+      <span>🎀</span>
+      <div class="line"></div>
+    </div>
+
+    <section class="brand-wrap">
+      <div class="brand-box">
+        <div class="ears"><span>◜◝</span><span>◜◝</span></div>
+        <div class="logo">M<span class="o">o</span>Fu</div>
+        <div class="sublogo">Maid Café</div>
+        <div class="tagline">沫芙女僕咖啡廳｜出勤查詢手帳</div>
+      </div>
+    </section>
+
+    <div class="menu-ribbon">MENU</div>
+    <p class="welcome-note">可查詢每位女僕的上班日，也可以依日期查看當天有哪些女僕上班。週三固定公休；假日班次為早／中／晚，平日為早／晚，2026 年國定假日與補假自動使用假日班制（週三仍公休）。管理員在 Google 試算表更新班表，網站自動同步。</p>
+
+    <div class="toolbar">
+      <div class="tabs">
+        <button id="tabCalendar" class="active" onclick="setTab('calendar')">🐾 日期查班</button>
+        <button id="tabMaids" onclick="setTab('maids')">🎀 女僕查班</button>
+        <button id="tabAdmin" onclick="setTab('admin')">⚙ 線上資料設定</button>
+      </div>
+      <div class="month-ctrl">
+        <button onclick="moveMonth(-1)" aria-label="上個月">‹ 上月</button>
+        <strong id="monthLabel"></strong>
+        <button onclick="moveMonth(1)" aria-label="下個月">下月 ›</button>
+        <button class="small" onclick="goToday()">今天</button>
+      </div>
+    </div>
+
+    <section id="calendarPage">
+      <div class="panel-grid">
+        <div class="card">
+          <div class="card-title">
+            <h2>✦ 月曆查班</h2>
+            <span class="muted hint">點日期查看當日班次｜週三固定公休</span>
+          </div>
+          <div class="week-head">
+            <span>日</span><span>一</span><span>二</span><span>三</span><span>四</span><span>五</span><span>六</span>
+          </div>
+          <div id="calendar" class="calendar"></div>
+        </div>
+
+        <div class="card">
+          <div class="card-title">
+            <h2 id="dateTitle">當日出勤</h2>
+            <span id="dateType" class="muted hint"></span>
+          </div>
+          <div id="dayDetail" class="detail-list"></div>
+          <div class="note" style="margin-top:14px">
+            <strong>班次規則（含 2026 台灣國定假日自動判斷）</strong><br>
+            平日：早班 14:00–18:00、晚班 18:00–22:00<br>
+            假日：早班 12:00–16:00、中班 16:00–20:00、晚班 20:00–24:00<br>
+            每週三固定公休。
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="maidsPage" class="hidden">
+      <div class="card" style="margin-bottom:18px">
+        <div class="card-title">
+          <h2>♡ 選擇女僕</h2>
+          <span class="muted hint">查看該女僕本月所有出勤日</span>
+        </div>
+        <div id="maidCards" class="maids"></div>
+      </div>
+      <div class="card">
+        <div class="card-title">
+          <h2 id="maidTitle">女僕出勤</h2>
+          <button class="small" onclick="setTab('calendar')">返回月曆</button>
+        </div>
+        <div id="maidDetail" class="persondays"></div>
+      </div>
+    </section>
+
+    <section id="adminPage" class="hidden">
+      <div class="card">
+        <div class="card-title"><h2>✦ Google 試算表連線設定</h2><span class="muted hint">A 版 · 線上資料來源</span></div>
+        <p>店長只需在 Google 試算表更新班表；網站會自動讀取公開的 CSV 資料，2026 年台灣國定假日自動套用假日班次。班別可使用「中+晚」等複合寫法，網站會自動展開顯示。此頁不提供直接編輯班次，以免出現不同步的本機版本。</p>
+        <div class="note">請只發布「公開出勤表」工作表，勿放入手機、私人聯絡資料或尚未公開的內部資訊。Google 試算表編輯權限由 Google 帳號控制，無須把管理員密碼放進公開網頁。</div>
+        <div class="form-grid" style="grid-template-columns:1fr;margin-top:15px">
+          <label class="field">Google Sheet「發布到網路 → CSV」網址
+            <input id="sheetUrl" type="url" placeholder="https://docs.google.com/spreadsheets/d/e/.../pub?output=csv" spellcheck="false">
+          </label>
+        </div>
+        <div class="inline-actions" style="margin-top:12px">
+          <button class="primary" onclick="saveSheetUrl()">儲存此瀏覽器的測試網址並同步</button>
+          <button onclick="syncSheet()">立即重新同步</button>
+          <button onclick="downloadCsvTemplate()">下載 Google Sheet 範本</button>
+          <button onclick="document.getElementById('localCsv').click()">從本機匯入 CSV（測試）</button>
+          <input id="localCsv" type="file" accept=".csv,text/csv" style="display:none" onchange="importLocalCsv(event)">
+        </div>
+        <div class="note" style="margin-top:12px">網站已綁定 Google Sheet。線上同步需將整個專案（包含 <code>worker.js</code> 和 <code>wrangler.jsonc</code>）部署到 Cloudflare Workers，不能只上傳 HTML。直接從電腦開啟 HTML 時，可使用下方 CSV 匯入測試。</div>
+        <h3 style="margin-top:20px">設定流程</h3>
+        <ol><li>Google Sheet 發布網址已設定。</li><li>將整個專案推送至 GitHub，並使用 Cloudflare Workers Git 整合，部署指令使用 npx wrangler deploy。</li><li>使用隨附 wrangler.jsonc，靜態網站資源只會從 <code>public/</code> 部署。</li><li>開啟部署網址，先測試 <code>/api/sheet</code> 能否看到 CSV，再測試月曆是否顯示出勤。</li><li>日後只需修改 Google Sheet；更新可能因 Google 發布快取略有延遲。</li></ol>
+        <div id="statusBar" class="status-bar info show" role="status">尚未連線</div>
+      </div>
+    </section>
+
+    <div class="footer">Made with ♡ for MOFU｜Google Sheet 即時查班示範｜班表請以店家公告為準</div>
+  </main>
+
+  <script>
+    // 發布網站前請把正式 CSV 網址填入引號內，這樣所有人會自動看到同一份班表。
+    const DEFAULT_SHEET_CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vTQ_60RGTZ6lUOkukmHeH7vHopLRljD-iFoZHVW-9TlqEydrfaR3Q1De5psmdfMqm_f17OpXl1MaHXC/pub?gid=1214441936&single=true&output=csv';
+    const SHEET_URL_KEY = 'mofu-public-sheet-url';
+    const KEY = 'mofu-sheet-readonly-cache-v1';
+    const PASS_KEY = 'mofu-admin-password';
+    const SESSION_KEY = 'mofu-admin-logged-in';
+    const weekdays = ['日','一','二','三','四','五','六'];
+    const pad = n => String(n).padStart(2,'0');
+    const today = new Date();
+    let year = today.getFullYear();
+    let month = today.getMonth();
+    let selected = formatDate(today);
+    let selectedMaid = null;
+    let currentTab = 'calendar';
+    let sheetSyncError = '';
+    let lastSynced = null;
+    let data = {maids:[],shifts:[],holidays:[]};
+
+    function formatDate(d){ return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`; }
+    function parseDate(s){ return new Date(s + 'T12:00:00'); }
+    function escapeHtml(s){ return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+
+    function loadData(){
+      try{
+        const raw = JSON.parse(localStorage.getItem(KEY));
+        if(raw && Array.isArray(raw.maids) && Array.isArray(raw.shifts) && Array.isArray(raw.holidays)) return raw;
+      }catch(e){}
+      return { maids: [], shifts: [], holidays: [] };
+    }
+
+    function saveData(){
+      localStorage.setItem(KEY, JSON.stringify(data));
+      render();
+    }
+
+    function isWeekend(d){ return d.getDay() === 0 || d.getDay() === 6; }
+    function isClosed(d){ return d.getDay() === 3; }
+    // 2026 年官方辦公日曆：國定假日、補假及春節連假。
+    // 其他年份不猜測農曆/補假日期；可透過試算表「假日班制=是」補充。
+    const OFFICIAL_HOLIDAYS = {
+      '2026-01-01':'元旦',
+      '2026-02-16':'春節連假','2026-02-17':'農曆初一','2026-02-18':'農曆初二',
+      '2026-02-19':'春節連假','2026-02-20':'春節連假',
+      '2026-02-27':'和平紀念日補假',
+      '2026-04-03':'兒童節補假','2026-04-06':'清明節補假',
+      '2026-05-01':'勞動節',
+      '2026-06-19':'端午節',
+      '2026-09-25':'中秋節','2026-09-28':'教師節',
+      '2026-10-09':'國慶日補假','2026-10-26':'臺灣光復節補假',
+      '2026-12-25':'行憲紀念日'
+    };
+    function officialHolidayName(d){ return OFFICIAL_HOLIDAYS[formatDate(d)] || ''; }
+    function isHolidayMode(d){ return isWeekend(d) || !!officialHolidayName(d) || data.holidays.includes(formatDate(d)); }
+    function calendarDayType(d){
+      if(isClosed(d))return '公休';
+      if(officialHolidayName(d))return '國定假日';
+      if(isWeekend(d))return '週末';
+      if(data.holidays.includes(formatDate(d)))return '特殊假日';
+      return '平日';
+    }
+    function getShiftDefs(d){
+      return isHolidayMode(d)
+        ? [['早','12:00–16:00'],['中','16:00–20:00'],['晚','20:00–24:00']]
+        : [['早','14:00–18:00'],['晚','18:00–22:00']];
+    }
+    function getShifts(dateStr){ return data.shifts.filter(x => x.date === dateStr); }
+    function dateName(dateStr){ const d = parseDate(dateStr); return `${d.getMonth()+1}月${d.getDate()}日（週${weekdays[d.getDay()]}）`; }
+
+    function setTab(tab){ currentTab = tab; render(); }
+    function moveMonth(offset){ const d = new Date(year, month + offset, 1); year = d.getFullYear(); month = d.getMonth(); render(); }
+    function goToday(){ year = today.getFullYear(); month = today.getMonth(); selected = formatDate(today); render(); }
+    function chooseDate(dateStr){ const d = parseDate(dateStr); year = d.getFullYear(); month = d.getMonth(); selected = dateStr; render(); }
+    function selectMaid(name){ selectedMaid = decodeURIComponent(name); render(); }
+
+    function render(){
+      ['calendar','maids','admin'].forEach(tab => {
+        document.getElementById(tab + 'Page').classList.toggle('hidden', currentTab !== tab);
+        document.getElementById('tab' + tab[0].toUpperCase() + tab.slice(1)).classList.toggle('active', currentTab === tab);
+      });
+      document.getElementById('monthLabel').textContent = `${year} 年 ${month+1} 月`;
+      renderCalendar();
+      renderDayDetail();
+      renderMaidCards();
+      renderAdmin();
+    }
+
+    function renderCalendar(){
+      const first = new Date(year, month, 1);
+      const startOffset = first.getDay();
+      const daysInMonth = new Date(year, month+1, 0).getDate();
+      const totalCells = Math.ceil((startOffset + daysInMonth) / 7) * 7;
+      const cells = [];
+      for(let i=0;i<totalCells;i++){
+        const d = new Date(year, month, 1 + i - startOffset);
+        const s = formatDate(d);
+        const shifts = getShifts(s);
+        const names = [...new Set(shifts.map(x => x.maid))];
+        let tags = '';
+        if(isClosed(d)){
+          tags = '<span class="tag neutral">固定公休</span>';
+        }else if(names.length){
+          tags = names.slice(0,3).map((n,idx) => `<span class="tag ${idx%2?'alt':''}">${escapeHtml(n)}</span>`).join('');
+          if(names.length > 3) tags += `<span class="tag neutral">＋${names.length-3} 位</span>`;
+        }else{
+          tags = '<span class="tag neutral">尚無班表</span>';
+        }
+        cells.push(`
+          <button class="day ${d.getMonth()!==month?'out':''} ${isClosed(d)?'closed':''} ${s===selected?'selected':''}" onclick="chooseDate('${s}')">
+            <div class="daynum">${d.getDate()}</div>
+            <div class="date-pill">${calendarDayType(d)}</div>
+            <div class="mini-tags">${tags}</div>
+          </button>
+        `);
+      }
+      document.getElementById('calendar').innerHTML = cells.join('');
+    }
+
+    function renderDayDetail(){
+      const d = parseDate(selected);
+      const defs = getShiftDefs(d);
+      const shifts = getShifts(selected);
+      document.getElementById('dateTitle').textContent = `${dateName(selected)} · 出勤名單`;
+      document.getElementById('dateType').textContent = isClosed(d) ? '週三固定公休' : (officialHolidayName(d) ? officialHolidayName(d) + ' · 假日班制' : (isHolidayMode(d) ? '假日班制' : '平日班制'));
+      if(isClosed(d)){
+        document.getElementById('dayDetail').innerHTML = '<div class="empty">☁ 今天是固定公休日，女僕們也要好好休息 ♡</div>';
+        return;
+      }
+      document.getElementById('dayDetail').innerHTML = defs.map(([key,time]) => {
+        const names = shifts.filter(x => x.shift === key).map(x => x.maid);
+        return `
+          <div class="shift-row">
+            <div class="clock">${key}班<span>${time}</span></div>
+            <div class="chips">${names.length ? names.map(n => `<span class="chip">${escapeHtml(n)}</span>`).join('') : '<span class="muted hint">尚未公布</span>'}</div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function renderMaidCards(){
+      const cards = document.getElementById('maidCards');
+      if(!data.maids.length){
+        cards.innerHTML = '<div class="empty">尚未建立女僕名單，可至管理員模式新增。</div>';
+      }else{
+        cards.innerHTML = data.maids.map(n => {
+          const count = new Set(data.shifts.filter(x => x.maid===n && parseDate(x.date).getFullYear()===year && parseDate(x.date).getMonth()===month).map(x=>x.date)).size;
+          return `<button class="maid-card" onclick="selectMaid('${encodeURIComponent(n)}')"><strong>♡ ${escapeHtml(n)}</strong><span>本月 ${count} 個出勤日</span></button>`;
+        }).join('');
+      }
+
+      document.getElementById('maidTitle').textContent = selectedMaid ? `${selectedMaid} · ${month+1}月出勤` : '女僕出勤';
+      const detail = document.getElementById('maidDetail');
+      const rows = data.shifts
+        .filter(x => x.maid === selectedMaid && parseDate(x.date).getFullYear()===year && parseDate(x.date).getMonth()===month)
+        .sort((a,b) => a.date.localeCompare(b.date) || ['早','中','晚'].indexOf(a.shift)-['早','中','晚'].indexOf(b.shift));
+      const grouped = new Map();
+      for(const rec of rows){
+        if(!grouped.has(rec.date))grouped.set(rec.date,[]);
+        grouped.get(rec.date).push(rec.shift);
+      }
+      detail.innerHTML = rows.length
+        ? [...grouped].map(([date,shiftNames]) => {
+            const defs = getShiftDefs(parseDate(date));
+            const unique = [...new Set(shiftNames)].sort((a,b)=>['早','中','晚'].indexOf(a)-['早','中','晚'].indexOf(b));
+            const times = unique.map(n=>defs.find(y=>y[0]===n)?.[1] || '請確認時段');
+            return `<div class="personday"><strong>${dateName(date)}</strong><div class="inline-actions"><span class="chip">${unique.join('+')}班 · ${times.join('、')}</span><button class="small" onclick="setTab('calendar');chooseDate('${date}')">查看</button></div></div>`;
+          }).join('')
+        : '<div class="empty">目前月份沒有已登錄的出勤資料</div>';
+    }
+
+    function renderAdmin(){
+      const el=document.getElementById('sheetUrl');
+      if(document.activeElement!==el) el.value=getSheetUrl();
+    }
+    function showStatus(message,type='info'){
+      const bar=document.getElementById('statusBar');
+      bar.className=`status-bar show ${type}`;
+      bar.textContent=message;
+    }
+    function validSheetUrl(raw){
+      try{
+        const u=new URL(raw);
+        return u.protocol==='https:' && u.hostname==='docs.google.com' &&
+          /^\/spreadsheets\/d\/(?:e\/)?[^/]+\/pub(?:\/html)?$/.test(u.pathname) &&
+          u.searchParams.get('output')==='csv';
+      }catch(e){return false;}
+    }
+    function getSheetUrl(){ return DEFAULT_SHEET_CSV_URL; }
+    function saveSheetUrl(){
+      const url=document.getElementById('sheetUrl').value.trim();
+      if(!validSheetUrl(url)){showStatus('請貼上 Google 試算表「發布到網路」的 CSV 網址（.../pub?output=csv）。','warn');return;}
+      localStorage.setItem(SHEET_URL_KEY,url);
+      syncSheet();
+    }
+    async function syncSheet(){
+      const url=getSheetUrl();
+      if(!url){showStatus('尚未設定 Google Sheet CSV 網址，請先完成設定。','info');return;}
+      if(!validSheetUrl(url)){showStatus('CSV 網址格式不正確。','warn');return;}
+      showStatus('正在讀取 Google 試算表…','info');
+      try{
+        if(location.protocol==='file:') throw Error('目前是本機檔案模式。線上同步需部署包含 worker.js 的 Cloudflare Workers 完整資料夾；本機可使用下方 CSV 匯入測試。');
+        const response=await fetch('/api/sheet',{cache:'no-store'});
+        if(!response.ok) throw Error(`HTTP ${response.status}`);
+        const txt=await response.text();
+        if(/<html|<!doctype/i.test(txt.slice(0,200))) throw Error('取得的是 HTML 頁面，不是 CSV。請檢查「發布到網路」格式');
+        const imported=parseCsvData(txt);
+        data=imported;
+        lastSynced=new Date();
+        sheetSyncError='';
+        render();
+        showStatus(`同步成功：${data.maids.length} 位女僕、${data.shifts.length} 筆班次；更新時間 ${lastSynced.toLocaleString('zh-TW')}`,'ok');
+      }catch(err){
+        sheetSyncError=err.message;
+        showStatus('無法同步：'+err.message+'。請確認網站是透過 Cloudflare Workers 連同 worker.js 部署，並測試 /api/sheet。','warn');
+      }
+    }
+    async function importLocalCsv(event){
+      const f=event.target.files?.[0]; if(!f)return;
+      try{const parsed=parseCsvData(await f.text());data=parsed;lastSynced=new Date();render();showStatus(`本機匯入成功：${data.maids.length} 位女僕、${data.shifts.length} 筆班次；此資料不會同步給其他訪客。`,'ok');}
+      catch(err){showStatus('CSV 匯入失敗：'+err.message,'warn');}
+      finally{event.target.value='';}
+    }
+    function downloadCsvTemplate(){downloadCsv('MOFU_Google試算表_排班範本.csv',[CSV_HEADERS,['2026-11-01','示例女僕','中+晚','是']]);}
+    // Google 試算表友善的 UTF-8 CSV；所有欄位在匯入前完整檢查。
+    const CSV_HEADERS = ['日期','女僕','班別','假日班制'];
+    function csvCell(value){
+      const s = String(value ?? '');
+      return '"' + s.replace(/"/g,'""') + '"';
+    }
+    function downloadCsv(filename, rows){
+      const csv = '\uFEFF' + rows.map(row => row.map(csvCell).join(',')).join('\r\n') + '\r\n';
+      const blob = new Blob([csv],{type:'text/csv;charset=utf-8'});
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = filename;
+      a.click();
+      setTimeout(() => URL.revokeObjectURL(a.href),1000);
+    }
+    function parseCsv(text){
+      text=text.replace(/^\uFEFF/,'');
+      let rows=[],row=[],cell='',quoted=false;
+      for(let i=0;i<text.length;i++){
+        const c=text[i];
+        if(quoted){
+          if(c==='"' && text[i+1]==='"'){cell+='"';i++;}
+          else if(c==='"'){quoted=false;}
+          else cell+=c;
+        }else if(c==='"'){
+          if(cell!=='') throw Error('CSV 引號格式錯誤');
+          quoted=true;
+        }else if(c===','){row.push(cell);cell='';}
+        else if(c==='\n'||c==='\r'){
+          if(c==='\r'&&text[i+1]==='\n') i++;
+          row.push(cell);cell='';
+          if(row.some(v=>v.trim()!=='')) rows.push(row);
+          row=[];
+        }else cell+=c;
+      }
+      if(quoted) throw Error('CSV 引號未結束');
+      if(cell!==''||row.length){row.push(cell);if(row.some(v=>v.trim()!==''))rows.push(row);}
+      return rows;
+    }
+    function parseCsvData(content){
+      const rows=parseCsv(content);
+      if(!rows.length) throw Error('CSV 為空白檔案');
+      const head=rows[0].map(s=>s.trim());
+      if(head.length!==4||head.some((s,i)=>s!==CSV_HEADERS[i])) throw Error('表頭必須依序為：'+CSV_HEADERS.join('、'));
+      const output={maids:[],shifts:[],holidays:[]},seen=new Set(),holidayFlags=new Map();
+      // Google Sheets may export a date using the spreadsheet locale.
+      // Normalize supported forms to YYYY-MM-DD before validation and storage.
+      function normalizeSheetDate(input){
+        const raw=String(input??'').trim().replace(/\u00a0/g,' ');
+        if(!raw) return '';
+        let match, y, m, day;
+        // 2026-11-01, 2026/11/1, 2026.11.1, 2026年11月1日
+        match=raw.match(/^(\d{4})\s*(?:[-/.]|年)\s*(\d{1,2})\s*(?:[-/.]|月)\s*(\d{1,2})\s*(?:日)?$/);
+        if(match){[,y,m,day]=match;}
+        else {
+          // 11/1/2026 (US-style month/day/year)
+          match=raw.match(/^(\d{1,2})\s*\/\s*(\d{1,2})\s*\/\s*(\d{4})$/);
+          if(match){m=match[1];day=match[2];y=match[3];}
+          else return null;
+        }
+        const yy=Number(y), mm=Number(m), dd=Number(day);
+        if(yy<1900||yy>2100||mm<1||mm>12||dd<1||dd>31) return null;
+        const d=new Date(yy,mm-1,dd,12);
+        if(d.getFullYear()!==yy||d.getMonth()!==mm-1||d.getDate()!==dd) return null;
+        return `${yy}-${pad(mm)}-${pad(dd)}`;
+      }
+      for(let i=1;i<rows.length;i++){
+        const r=rows[i];
+        if(r.length>4) throw Error(`第 ${i+1} 行多於四欄`);
+        const [rawDate,maid,shift,holiday]=Array.from({length:4},(_,j)=>(r[j]||'').trim());
+        if(!rawDate&&!maid&&!shift&&!holiday)continue;
+        const date=normalizeSheetDate(rawDate);
+        if(rawDate&&date===null)throw Error(`第 ${i+1} 行日期「${rawDate}」無法辨識；請使用 YYYY-MM-DD、YYYY/MM/DD 或 MM/DD/YYYY`);
+        if(maid&&!output.maids.includes(maid))output.maids.push(maid);
+        if(holiday&&!['是','否'].includes(holiday))throw Error(`第 ${i+1} 行「假日班制」只能填是或否`);
+        if(holiday&&!date)throw Error(`第 ${i+1} 行缺少日期`);
+        if(date){
+          if(isClosed(parseDate(date))&&(maid&&shift||holiday==='是'))throw Error(`第 ${i+1} 行週三固定公休`);
+          if(holiday){if(holidayFlags.has(date)&&holidayFlags.get(date)!==holiday)throw Error(`第 ${i+1} 行假日設定矛盾`);holidayFlags.set(date,holiday);}
+        }
+        if(shift){
+          if(!date||!maid)throw Error(`第 ${i+1} 行排班缺少日期或女僕`);
+          const parts=shift.replace(/\s/g,'').split(/[+＋]/);
+          if(parts.some(x=>!['早','中','晚'].includes(x))||!parts.length||new Set(parts).size!==parts.length)throw Error(`第 ${i+1} 行班別格式錯誤：可填早、晚、早+晚（假日另可填中、早+中、中+晚、早+中+晚）`);
+          if(isClosed(parseDate(date)))throw Error(`第 ${i+1} 行週三禁止排班`);
+          for(const part of parts){
+            const key=[date,maid,part].join('|');
+            if(seen.has(key))throw Error(`第 ${i+1} 行有重複班次：${maid} ${part}班`);
+            seen.add(key);output.shifts.push({date,maid,shift:part});
+          }
+        }else if(date&&maid)throw Error(`第 ${i+1} 行有日期和女僕，但沒有填班別`);
+        if(!maid&&!date)throw Error(`第 ${i+1} 行格式不完整`);
+      }
+      for(const [date,flag] of holidayFlags){
+        if(flag==='是'&&![0,3,6].includes(parseDate(date).getDay()))output.holidays.push(date);
+      }
+      for(const rec of output.shifts){
+        const d=parseDate(rec.date),holiday=isWeekend(d)||!!officialHolidayName(d)||output.holidays.includes(rec.date);
+        if(rec.shift==='中'&&!holiday)throw Error(`${rec.date} 為平日，不能安排中班`);
+      }
+      return output;
+    }
+    // 每隔五分鐘重新讀取一次；頁面重新獲得焦點時也會讀取。
+    window.addEventListener('focus',()=>{if(getSheetUrl())syncSheet();});
+    setInterval(()=>{if(getSheetUrl())syncSheet();},5*60*1000);
+    render();
+    if(getSheetUrl()) syncSheet();
+
+  </script>
+</body>
+</html>
