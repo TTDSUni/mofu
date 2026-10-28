@@ -800,14 +800,35 @@
       const head=rows[0].map(s=>s.trim());
       if(head.length!==4||head.some((s,i)=>s!==CSV_HEADERS[i])) throw Error('表頭必須依序為：'+CSV_HEADERS.join('、'));
       const output={maids:[],shifts:[],holidays:[]},seen=new Set(),holidayFlags=new Map();
-      const validDate = date=>/^\d{4}-\d{2}-\d{2}$/.test(date)&&formatDate(parseDate(date))===date;
+      // Google Sheets may export a date using the spreadsheet locale.
+      // Normalize supported forms to YYYY-MM-DD before validation and storage.
+      function normalizeSheetDate(input){
+        const raw=String(input??'').trim().replace(/\u00a0/g,' ');
+        if(!raw) return '';
+        let match, y, m, day;
+        // 2026-11-01, 2026/11/1, 2026.11.1, 2026年11月1日
+        match=raw.match(/^(\d{4})\s*(?:[-/.]|年)\s*(\d{1,2})\s*(?:[-/.]|月)\s*(\d{1,2})\s*(?:日)?$/);
+        if(match){[,y,m,day]=match;}
+        else {
+          // 11/1/2026 (US-style month/day/year)
+          match=raw.match(/^(\d{1,2})\s*\/\s*(\d{1,2})\s*\/\s*(\d{4})$/);
+          if(match){m=match[1];day=match[2];y=match[3];}
+          else return null;
+        }
+        const yy=Number(y), mm=Number(m), dd=Number(day);
+        if(yy<1900||yy>2100||mm<1||mm>12||dd<1||dd>31) return null;
+        const d=new Date(yy,mm-1,dd,12);
+        if(d.getFullYear()!==yy||d.getMonth()!==mm-1||d.getDate()!==dd) return null;
+        return `${yy}-${pad(mm)}-${pad(dd)}`;
+      }
       for(let i=1;i<rows.length;i++){
         const r=rows[i];
         if(r.length>4) throw Error(`第 ${i+1} 行多於四欄`);
-        const [date,maid,shift,holiday]=Array.from({length:4},(_,j)=>(r[j]||'').trim());
-        if(!date&&!maid&&!shift&&!holiday)continue;
+        const [rawDate,maid,shift,holiday]=Array.from({length:4},(_,j)=>(r[j]||'').trim());
+        if(!rawDate&&!maid&&!shift&&!holiday)continue;
+        const date=normalizeSheetDate(rawDate);
+        if(rawDate&&date===null)throw Error(`第 ${i+1} 行日期「${rawDate}」無法辨識；請使用 YYYY-MM-DD、YYYY/MM/DD 或 MM/DD/YYYY`);
         if(maid&&!output.maids.includes(maid))output.maids.push(maid);
-        if(date&&!validDate(date))throw Error(`第 ${i+1} 行的日期須為 YYYY-MM-DD`);
         if(holiday&&!['是','否'].includes(holiday))throw Error(`第 ${i+1} 行「假日班制」只能填是或否`);
         if(holiday&&!date)throw Error(`第 ${i+1} 行缺少日期`);
         if(date){
