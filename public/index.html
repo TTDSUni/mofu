@@ -418,6 +418,67 @@
       .ears{gap:120px;font-size:28px}
       .clock{min-width:96px}
     }
+
+    /* Mobile-first enhancements; desktop layout stays unchanged. */
+    button, input, select { -webkit-tap-highlight-color: transparent; }
+    button:focus-visible { outline: 3px solid #956b60; outline-offset: 2px; }
+    .mobile-count { display:none; }
+    @media (max-width: 640px) {
+      body { overflow-x:hidden; }
+      .page { padding:14px 12px 30px; min-height:100vh; }
+      .page:before,.page:after { inset:6px; border-width:1px; }
+      .top-ribbon { margin:0 0 7px; }
+      .brand-wrap { padding:0 8px 10px; }
+      .brand-box { padding:18px 12px 14px; }
+      .logo { font-size:42px; }
+      .sublogo { font-size:19px; margin-top:2px; }
+      .tagline { font-size:11px; letter-spacing:.02em; }
+      .ears { display:none; }
+      .menu-ribbon { font-size:20px; padding:8px 20px; margin:8px auto 12px; }
+      .menu-ribbon:before,.menu-ribbon:after { font-size:16px; }
+      .welcome-note { font-size:12px; padding:0 10px; margin:0 auto 14px; }
+      .toolbar { display:grid; gap:10px; margin:0 0 12px; }
+      .tabs { display:grid; grid-template-columns:1fr 1fr; width:100%; gap:8px; }
+      .tabs button { min-height:46px; width:100%; font-size:14px; padding:10px 7px; }
+      .month-ctrl { display:grid; grid-template-columns:1fr auto 1fr auto; width:100%; gap:6px; }
+      .month-ctrl button { min-height:42px; padding:8px 6px; }
+      #monthLabel { font-size:14px; white-space:nowrap; min-width:106px; text-align:center; }
+      .card { padding:13px 9px; border-radius:15px; min-width:0; }
+      .card-title { gap:5px; margin-bottom:11px; }
+      .card-title h2 { font-size:17px; }
+      .card-title .hint { font-size:11px; }
+      .panel-grid { gap:12px; }
+      .week-head,.calendar { gap:3px; }
+      .week-head { font-size:12px; margin-bottom:6px; }
+      .day { min-width:0; min-height:70px; border-radius:10px; padding:5px 2px; align-items:center; text-align:center; gap:3px; justify-content:flex-start; box-shadow:none; }
+      .daynum { font-size:14px; }
+      .day .date-pill { display:none; }
+      .day .mini-tags { display:none; }
+      .mobile-count { display:block; font-size:9px; color:#806459; padding:2px 3px; line-height:1.2; font-weight:700; }
+      .day.closed .mobile-count { color:#a58c84; }
+      .day.selected { outline:2px solid #946d5d; background:#f8e9df; }
+      .day.out .mobile-count { opacity:.5; }
+      .detail-list { gap:4px; }
+      .shift-row { gap:8px; padding:12px 4px; }
+      .clock { min-width:95px; }
+      .clock span { font-size:11px; }
+      .chips { gap:5px; }
+      .chip { font-size:12px; }
+      .maids { grid-template-columns:repeat(2,minmax(0,1fr)); gap:9px; }
+      .maid-card { padding:12px; min-height:75px; }
+      .maid-card strong { font-size:16px; }
+      .personday { padding:10px; align-items:flex-start; }
+      .personday .inline-actions { width:100%; justify-content:space-between; }
+      .personday .chip { white-space:normal; }
+      .note { font-size:12px; }
+      .footer { font-size:11px; }
+    }
+    @media (max-width: 360px) {
+      .day { min-height:62px; }
+      .month-ctrl { grid-template-columns:1fr auto 1fr; }
+      .month-ctrl .small { grid-column:1 / -1; }
+      .brand-box { padding:16px 10px; }
+    }
   </style>
 </head>
 <body>
@@ -603,7 +664,7 @@
     function setTab(tab){ currentTab = tab === 'maids' ? 'maids' : 'calendar'; render(); }
     function moveMonth(offset){ const d = new Date(year, month + offset, 1); year = d.getFullYear(); month = d.getMonth(); render(); }
     function goToday(){ year = today.getFullYear(); month = today.getMonth(); selected = formatDate(today); render(); }
-    function chooseDate(dateStr){ const d = parseDate(dateStr); year = d.getFullYear(); month = d.getMonth(); selected = dateStr; render(); }
+    function chooseDate(dateStr){ const d = parseDate(dateStr); year = d.getFullYear(); month = d.getMonth(); selected = dateStr; render(); if(window.matchMedia('(max-width: 640px)').matches){ document.getElementById('dateTitle').scrollIntoView({behavior:'smooth',block:'start'}); } }
     function selectMaid(name){ selectedMaid = decodeURIComponent(name); render(); }
 
     function render(){
@@ -643,6 +704,7 @@
             <div class="daynum">${d.getDate()}</div>
             <div class="date-pill">${calendarDayType(d)}</div>
             <div class="mini-tags">${tags}</div>
+            <span class="mobile-count">${isClosed(d) ? '公休' : names.length ? names.length + ' 位' : '－'}</span>
           </button>
         `);
       }
