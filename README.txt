@@ -1,22 +1,9 @@
-MOFU Cloudflare Workers 直接部署版
+MOFU Workers 國定假日自動辨識版
 
-這版是配合你現有的「npx wrangler deploy」Workers 部署流程（非 Pages Functions）。
+請把本專案根目錄的 worker.js、wrangler.jsonc 及 public/index.html 按相同路徑上傳 GitHub。
+Cloudflare Workers 部署指令：npx wrangler deploy
 
-請把本 ZIP 解壓後的 3 項內容放在 GitHub Repository 根目錄：
-  - wrangler.jsonc
-  - worker.js
-  - public/index.html
-不要把整包 ZIP 本身上傳為專案檔案，也不需要保留先前 functions/ 目錄。
-
-Cloudflare Workers 設定：
-  建置指令：可留空
-  部署指令：npx wrangler deploy
-  Root directory：Repository root
-
-重要：本次不再使用 assets.directory = "."，只部署 public/ 內的英文檔名 index.html，避開 Manifest path must be URI encoded 錯誤。
-
-部署成功後測試：
-  https://你的域名/api/sheet  應回傳 CSV 原文
-  https://你的域名/           應顯示 MOFU 月曆
-
-若 /api/sheet 回傳 502，代表 Worker 已成功運作，但 Google Sheet 發布連結的上游抓取失敗；再檢查 Google Sheet 的發布狀態。
+2026 台灣國定假日和補假自動切換假日班制；週三依店家規則固定公休。
+Google Sheet 假日班制欄仍可設 是，為其他年份或店家特殊假日指定假日班制。
+2027 年及之後的官方假日尚未內建，請先用試算表覆蓋，並在公告後更新年度假日資料。
+注意：官方政府行政機關日曆不一定等同沫芙營業安排，請以店家規定為準。
