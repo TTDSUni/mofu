@@ -54,6 +54,15 @@ async function monthMap(env){
 export default {
   async fetch(request,env){
     const url=new URL(request.url);
+    if(url.pathname==='/api/events'){
+      if(!['GET','HEAD'].includes(request.method))return new Response('Method not allowed',{status:405,headers:textHeaders});
+      const gid=String(env.EVENT_GID||'').trim();
+      if(!gid)return new Response(null,{status:204,headers:{'Cache-Control':'no-store'}});
+      try{
+        const csv=await readCsv(gid);
+        return new Response(request.method==='HEAD'?null:csv,{headers:{'Content-Type':'text/csv; charset=utf-8','Cache-Control':'public,max-age=60'}});
+      }catch(err){return new Response('活動資料讀取失敗：'+String(err.message||err),{status:502,headers:textHeaders});}
+    }
     if(url.pathname==='/api/sheet'||url.pathname==='/api/months'){
       if(!['GET','HEAD'].includes(request.method))return new Response('Method not allowed',{status:405,headers:textHeaders});
       try{
