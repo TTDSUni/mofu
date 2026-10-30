@@ -549,13 +549,6 @@
     </section>
 
     <section id="maidsPage" class="hidden">
-      <div class="card" style="margin-bottom:18px">
-        <div class="card-title">
-          <h2>♡ 選擇女僕</h2>
-          <span class="muted hint">查看該女僕本月所有出勤日</span>
-        </div>
-        <div id="maidCards" class="maids"></div>
-      </div>
       <div class="card">
         <div class="card-title"><h2>♡ 選擇女僕</h2><span class="muted hint">點選女僕，彈出本月出勤日</span></div>
         <div id="maidCards" class="maids"></div>
@@ -608,7 +601,12 @@
       </div>
     </dialog>
 
-    <div class="footer">Made with ♡ for MOFU｜Google Sheet 線上出勤查詢｜班表請以店家公告為準<div id="publicSyncState" aria-live="polite" style="margin-top:8px;font-size:12px"></div></div>
+    <div class="footer">Made with ♡ for MOFU｜Google Sheet 線上出勤查詢｜班表請以店家公告為準<div id="publicSyncState" aria-live="polite" style="margin:12px auto 0;max-width:750px;font-size:13px;line-height:1.6"></div>
+      <div id="syncTroubleshoot" hidden style="margin:10px auto 0;max-width:750px;padding:13px;border:1px solid #dcb9ab;border-radius:12px;background:#fff8f2;text-align:left;line-height:1.6;font-size:13px">
+        <strong>班表同步失敗</strong><div id="syncErrorDetail" style="overflow-wrap:anywhere;margin:5px 0"></div>
+        <button type="button" onclick="syncSheet()" class="small" style="margin:5px 0">↻ 重新同步</button>
+        <div class="muted">若仍失敗，請開啟本站網址後加上 <code>/api/sheet</code>，確認回傳的是 CSV，而不是 HTML 或錯誤訊息。也可將上方錯誤文字提供給網站維護者。</div>
+      </div></div>
   </main>
 
   <script>
@@ -800,7 +798,11 @@
       bar.className=`status-bar show ${type}`;
       bar.textContent=message;
       const pub=document.getElementById('publicSyncState');
-      if(pub){ pub.textContent = type === 'ok' ? '✓ 班表已同步' : type === 'warn' ? '⚠ 班表同步異常，請稍後再試' : ''; }
+      const trouble=document.getElementById('syncTroubleshoot');
+      const detail=document.getElementById('syncErrorDetail');
+      if(pub) pub.textContent=type==='ok'?'✓ 班表已同步 · '+(lastSynced?lastSynced.toLocaleString('zh-TW'):''):type==='warn'?'⚠ 班表同步異常':type==='info'?'↻ 班表同步中…':'';
+      if(trouble) trouble.hidden=type!=='warn';
+      if(detail&&type==='warn') detail.textContent=message.replace(/^無法同步：/,'').replace(/。請確認網站是透過 Cloudflare Workers 連同 worker.js 部署，並測試 \/api\/sheet。$/,'');
     }
     function validSheetUrl(raw){
       try{
