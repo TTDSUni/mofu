@@ -3,6 +3,9 @@
   "name": "mofu",
   "main": "worker.js",
   "compatibility_date": "2026-10-23",
+  "vars": {
+    "INDEX_GID": ""
+  },
   "assets": {
     "directory": "./public",
     "binding": "ASSETS"
