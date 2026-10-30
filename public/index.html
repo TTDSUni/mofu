@@ -568,6 +568,7 @@
             <h2>✦ 月曆查班</h2>
             <span class="muted hint">點日期查看當天班次，手機可左右滑動月曆｜週三公休</span>
           </div>
+          <div id="eventStatus" class="event-inline-status" role="status" aria-live="polite">正在讀取活動資料…</div>
           <div class="calendar-scroll" role="region" aria-label="可左右滑動的月份月曆" tabindex="0"><div class="week-head"><span>日</span><span>一</span><span>二</span><span>三</span><span>四</span><span>五</span><span>六</span></div>
           <div id="calendar" class="calendar"></div></div>
       </div>
@@ -777,19 +778,28 @@
       }
       return output;
     }
+    function updateEventStatus(message, kind='info'){
+      const el=document.getElementById('eventStatus');
+      if(!el)return;
+      const palette={info:'#946f60',ok:'#4f7b57',warn:'#a45f50'};
+      el.style.color=palette[kind]||palette.info;
+      el.innerHTML=`${escapeHtml(message)} <button type="button" class="small" onclick="syncEvents()" style="margin-left:8px">重新同步活動</button>`;
+    }
     async function syncEvents(){
       const id=++eventRequestCounter;
+      updateEventStatus('正在同步活動…');
       try{
         const res=await fetch('/api/events',{cache:'no-store'});
         if(id!==eventRequestCounter)return;
-        if(res.status===204){events=[];eventSyncError='';renderCalendar();renderDayDetail();return;}
+        if(res.status===204){events=[];eventSyncError='';updateEventStatus('未設定 EVENT_GID：請在 Cloudflare Workers 環境變數設定活動分頁 gid。','warn');renderCalendar();renderDayDetail();return;}
         if(!res.ok)throw Error(`HTTP ${res.status}: ${(await res.text()).slice(0,150)}`);
         const parsed=parseEventCsv(await res.text());
         if(id!==eventRequestCounter)return;
-        events=parsed;eventSyncError='';renderCalendar();renderDayDetail();
+        events=parsed;eventSyncError='';updateEventStatus(parsed.length?`活動同步成功：共 ${parsed.length} 筆；請切換到活動日期所在月份查看。`:'活動分頁已讀取成功，但沒有任何有效活動紀錄。',parsed.length?'ok':'warn');renderCalendar();renderDayDetail();
       }catch(err){
         if(id!==eventRequestCounter)return;
         eventSyncError=String(err.message||err);
+        updateEventStatus('活動同步失敗：'+eventSyncError,'warn');
         console.warn('活動同步失敗，班表仍可使用：',eventSyncError);
       }
     }
