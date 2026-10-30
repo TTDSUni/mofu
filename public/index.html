@@ -497,6 +497,19 @@
       .mofu-dialog .personday .inline-actions { width:100%; }
     }
 
+    /* All devices use the same information-rich calendar; phones can swipe sideways. */
+    .calendar-scroll { width:100%; overflow-x:auto; overscroll-behavior-inline:contain; -webkit-overflow-scrolling:touch; scrollbar-color:#cbb2a4 #f6ece4; padding-bottom:8px; }
+    @media(max-width:640px){
+      .calendar-scroll .week-head,.calendar-scroll .calendar { min-width:760px; gap:6px; }
+      .calendar-scroll .day { display:flex; min-width:0; min-height:116px; align-items:stretch; text-align:left; padding:8px; gap:5px; border-radius:12px; }
+      .calendar-scroll .day .date-pill { display:inline-flex; }
+      .calendar-scroll .day .mini-tags { display:flex; }
+      .calendar-scroll .tag { font-size:11px; padding:4px 6px; }
+      .calendar-scroll .daynum { font-size:14px; }
+      .maids { grid-template-columns:repeat(auto-fill,minmax(180px,1fr)); }
+      .maid-card strong { font-size:19px; }
+      .welcome-note { font-size:13px; }
+    }
   </style>
 </head>
 <body>
@@ -522,7 +535,7 @@
     </section>
 
     <div class="menu-ribbon">MENU</div>
-    <p class="welcome-note">可查詢每位女僕的上班日，也可以依日期查看當天有哪些女僕上班。週三固定公休；假日班次為早／中／晚，平日為早／晚，2026 年國定假日與補假自動使用假日班制（週三仍公休）。管理員在 Google 試算表更新班表，網站自動同步。</p>
+    <p class="welcome-note">可依日期與女僕查詢出勤，切換月份會自動讀取對應的 Google 試算表分頁。週三固定公休；假日班次為早／中／晚，平日為早／晚，2026 年國定假日與補假自動使用假日班制（週三仍公休）。管理員在 Google 試算表更新班表，網站自動同步。</p>
 
     <div class="toolbar">
       <div class="tabs">
@@ -541,10 +554,10 @@
       <div class="card">
           <div class="card-title">
             <h2>✦ 月曆查班</h2>
-            <span class="muted hint">點選日期，彈出當天女僕的出勤班次｜週三固定公休</span>
+            <span class="muted hint">點日期查看當天班次，手機可左右滑動月曆｜週三公休</span>
           </div>
-          <div class="week-head"><span>日</span><span>一</span><span>二</span><span>三</span><span>四</span><span>五</span><span>六</span></div>
-          <div id="calendar" class="calendar"></div>
+          <div class="calendar-scroll" role="region" aria-label="可左右滑動的月份月曆" tabindex="0"><div class="week-head"><span>日</span><span>一</span><span>二</span><span>三</span><span>四</span><span>五</span><span>六</span></div>
+          <div id="calendar" class="calendar"></div></div>
       </div>
     </section>
 
@@ -614,6 +627,8 @@
     const DEFAULT_SHEET_CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vTQ_60RGTZ6lUOkukmHeH7vHopLRljD-iFoZHVW-9TlqEydrfaR3Q1De5psmdfMqm_f17OpXl1MaHXC/pub?gid=1214441936&single=true&output=csv';
     const SHEET_URL_KEY = 'mofu-public-sheet-url';
     const KEY = 'mofu-sheet-readonly-cache-v1';
+    let syncSequence=0;
+    let loadedMonth='';
     const PASS_KEY = 'mofu-admin-password';
     const SESSION_KEY = 'mofu-admin-logged-in';
     const weekdays = ['日','一','二','三','四','五','六'];
@@ -679,9 +694,9 @@
     function dateName(dateStr){ const d = parseDate(dateStr); return `${d.getMonth()+1}月${d.getDate()}日（週${weekdays[d.getDay()]}）`; }
 
     function setTab(tab){ closeAllModals(); currentTab = tab === 'maids' ? 'maids' : 'calendar'; render(); }
-    function moveMonth(offset){ closeAllModals(); const d = new Date(year, month + offset, 1); year = d.getFullYear(); month = d.getMonth(); render(); }
-    function goToday(){ closeAllModals(); year = today.getFullYear(); month = today.getMonth(); selected = formatDate(today); render(); }
-    function chooseDate(dateStr){ const d = parseDate(dateStr); year = d.getFullYear(); month = d.getMonth(); selected = dateStr; render(); openModal('dateModal'); }
+    function moveMonth(offset){ closeAllModals(); const d = new Date(year, month + offset, 1); year = d.getFullYear(); month = d.getMonth(); selected = formatDate(new Date(year,month,1)); render(); syncSheet(); }
+    function goToday(){ closeAllModals(); year = today.getFullYear(); month = today.getMonth(); selected = formatDate(today); render(); syncSheet(); }
+    function chooseDate(dateStr){ const d = parseDate(dateStr); const oldMonth=`${year}-${pad(month+1)}`; year = d.getFullYear(); month = d.getMonth(); selected = dateStr; render(); if(oldMonth!==`${year}-${pad(month+1)}`)syncSheet(); openModal('dateModal'); }
     function selectMaid(name){ selectedMaid = decodeURIComponent(name); render(); openModal('maidModal'); }
 
     function openModal(id){
@@ -730,7 +745,7 @@
             <div class="daynum">${d.getDate()}</div>
             <div class="date-pill">${calendarDayType(d)}</div>
             <div class="mini-tags">${tags}</div>
-            <span class="mobile-count">${isClosed(d) ? '公休' : names.length ? names.length + ' 位' : '－'}</span>
+
           </button>
         `);
       }
@@ -800,7 +815,7 @@
       const pub=document.getElementById('publicSyncState');
       const trouble=document.getElementById('syncTroubleshoot');
       const detail=document.getElementById('syncErrorDetail');
-      if(pub) pub.textContent=type==='ok'?'✓ 班表已同步 · '+(lastSynced?lastSynced.toLocaleString('zh-TW'):''):type==='warn'?'⚠ 班表同步異常':type==='info'?'↻ 班表同步中…':'';
+      if(pub) pub.textContent=type==='ok'?'✓ '+message:type==='warn'?'⚠ 班表同步異常':type==='info'?'↻ '+message:'';
       if(trouble) trouble.hidden=type!=='warn';
       if(detail&&type==='warn') detail.textContent=message.replace(/^無法同步：/,'').replace(/。請確認網站是透過 Cloudflare Workers 連同 worker.js 部署，並測試 \/api\/sheet。$/,'');
     }
@@ -820,25 +835,44 @@
       syncSheet();
     }
     async function syncSheet(){
-      const url=getSheetUrl();
-      if(!url){showStatus('尚未設定 Google Sheet CSV 網址，請先完成設定。','info');return;}
-      if(!validSheetUrl(url)){showStatus('CSV 網址格式不正確。','warn');return;}
-      showStatus('正在讀取 Google 試算表…','info');
+      const key=`${year}-${pad(month+1)}`;
+      const seq=++syncSequence;
+      if(location.protocol==='file:'){
+        showStatus('本機檔案不能連線：請在 Cloudflare Workers 上測試 /api/sheet?month='+key,'warn');return;
+      }
+      // When switching months, avoid showing last month's names against a new calendar.
+      if(loadedMonth!==key){ data={maids:[],shifts:[],holidays:[]}; render(); }
+      showStatus(`正在讀取 ${key} 班表…`,'info');
       try{
-        if(location.protocol==='file:') throw Error('目前是本機檔案模式。線上同步需部署包含 worker.js 的 Cloudflare Workers 完整資料夾；本機可使用下方 CSV 匯入測試。');
-        const response=await fetch('/api/sheet',{cache:'no-store'});
-        if(!response.ok) throw Error(`HTTP ${response.status}`);
+        const response=await fetch('/api/sheet?month='+encodeURIComponent(key),{cache:'no-store'});
+        if(seq!==syncSequence)return;
+        if(response.status===404){
+          const message=await response.text();
+          if(seq!==syncSequence)return;
+          data={maids:[],shifts:[],holidays:[]}; loadedMonth=key; render();
+          showStatus(`${key} 尚未公布班表（尚無對應分頁）`,'info');
+          return;
+        }
+        if(!response.ok){
+          const reason=(await response.text()).slice(0,300);
+          throw Error(`HTTP ${response.status}：${reason}`);
+        }
         const txt=await response.text();
-        if(/<html|<!doctype/i.test(txt.slice(0,200))) throw Error('取得的是 HTML 頁面，不是 CSV。請檢查「發布到網路」格式');
+        if(/<html|<!doctype/i.test(txt.slice(0,200))) throw Error('收到 HTML，而不是 CSV。請確認分頁已發布');
         const imported=parseCsvData(txt);
-        data=imported;
-        lastSynced=new Date();
-        sheetSyncError='';
-        render();
-        showStatus(`同步成功：${data.maids.length} 位女僕、${data.shifts.length} 筆班次；更新時間 ${lastSynced.toLocaleString('zh-TW')}`,'ok');
+        if(seq!==syncSequence)return;
+        // Prevent rows accidentally placed in the wrong monthly tab from being displayed.
+        // Only show the selected month even if a legacy sheet includes several months.
+        imported.shifts=imported.shifts.filter(x=>x.date.startsWith(key));
+        imported.holidays=imported.holidays.filter(x=>x.startsWith(key));
+        imported.maids=[...new Set(imported.shifts.map(x=>x.maid))];
+        data=imported;loadedMonth=key;lastSynced=new Date();sheetSyncError='';render();
+        showStatus(`${key} 班表已同步 · ${data.maids.length} 位女僕 / ${data.shifts.length} 個班次 · ${lastSynced.toLocaleTimeString('zh-TW')}`,'ok');
       }catch(err){
+        if(seq!==syncSequence)return;
         sheetSyncError=err.message;
-        showStatus('無法同步：'+err.message+'。請確認網站是透過 Cloudflare Workers 連同 worker.js 部署，並測試 /api/sheet。','warn');
+        if(loadedMonth!==key){ data={maids:[],shifts:[],holidays:[]};render(); }
+        showStatus('無法同步：'+key+' '+err.message,'warn');
       }
     }
     async function importLocalCsv(event){
@@ -890,8 +924,22 @@
     function parseCsvData(content){
       const rows=parseCsv(content);
       if(!rows.length) throw Error('CSV 為空白檔案');
-      const head=rows[0].map(s=>s.trim());
-      if(head.length!==4||head.some((s,i)=>s!==CSV_HEADERS[i])) throw Error('表頭必須依序為：'+CSV_HEADERS.join('、'));
+      // Map CSV columns by name instead of fixed order. Google Sheets can export
+      // extra columns, reordered columns and localized/alternate headings.
+      const headers=rows[0].map(s=>String(s||'').replace(/^\uFEFF/,'').replace(/[\s\u00a0\u3000]/g,'').replace(/[：:]/g,'').trim());
+      const aliases={
+        date:['日期','出勤日期','上班日期','排班日期','date'],
+        maid:['女僕','女仆','女僕名稱','女僕名字','姓名','名字','maid','name'],
+        shift:['班別','班次','時段','出勤班別','上班班別','shift'],
+        holiday:['假日班制','假日','是否假日','是否假日班制','假日班','holiday']
+      };
+      const matchColumn=arr=>headers.findIndex(h=>arr.some(alias=>h.toLowerCase()===alias.toLowerCase()));
+      const columns=Object.fromEntries(Object.entries(aliases).map(([name,arr])=>[name,matchColumn(arr)]));
+      if(columns.date<0||columns.maid<0||columns.shift<0){
+        throw Error('CSV 必須含「日期、女僕、班別」三個欄位。實際表頭：'+(rows[0].map(x=>JSON.stringify(x)).join('、')||'（空白）'));
+      }
+      const used=[columns.date,columns.maid,columns.shift,columns.holiday].filter(n=>n>=0);
+      if(new Set(used).size!==used.length)throw Error('CSV 表頭對應到重複欄位，請檢查第一列');
       const output={maids:[],shifts:[],holidays:[]},seen=new Set(),holidayFlags=new Map();
       // Google Sheets may export a date using the spreadsheet locale.
       // Normalize supported forms to YYYY-MM-DD before validation and storage.
@@ -916,8 +964,10 @@
       }
       for(let i=1;i<rows.length;i++){
         const r=rows[i];
-        if(r.length>4) throw Error(`第 ${i+1} 行多於四欄`);
-        const [rawDate,maid,shift,holiday]=Array.from({length:4},(_,j)=>(r[j]||'').trim());
+        const rawDate=String(r[columns.date]??'').trim();
+        const maid=String(r[columns.maid]??'').trim();
+        const shift=String(r[columns.shift]??'').trim();
+        const holiday=columns.holiday>=0?String(r[columns.holiday]??'').trim():'';
         if(!rawDate&&!maid&&!shift&&!holiday)continue;
         const date=normalizeSheetDate(rawDate);
         if(rawDate&&date===null)throw Error(`第 ${i+1} 行日期「${rawDate}」無法辨識；請使用 YYYY-MM-DD、YYYY/MM/DD 或 MM/DD/YYYY`);
@@ -951,10 +1001,10 @@
       return output;
     }
     // 每隔五分鐘重新讀取一次；頁面重新獲得焦點時也會讀取。
-    window.addEventListener('focus',()=>{if(getSheetUrl())syncSheet();});
-    setInterval(()=>{if(getSheetUrl())syncSheet();},5*60*1000);
+    window.addEventListener('focus',()=>syncSheet());
+    setInterval(()=>syncSheet(),5*60*1000);
     render();
-    if(getSheetUrl()) syncSheet();
+    syncSheet();
 
   </script>
 </body>
