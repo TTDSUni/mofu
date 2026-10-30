@@ -418,6 +418,85 @@
       .ears{gap:120px;font-size:28px}
       .clock{min-width:96px}
     }
+
+    /* Mobile-first enhancements; desktop layout stays unchanged. */
+    button, input, select { -webkit-tap-highlight-color: transparent; }
+    button:focus-visible { outline: 3px solid #956b60; outline-offset: 2px; }
+    .mobile-count { display:none; }
+    @media (max-width: 640px) {
+      body { overflow-x:hidden; }
+      .page { padding:14px 12px 30px; min-height:100vh; }
+      .page:before,.page:after { inset:6px; border-width:1px; }
+      .top-ribbon { margin:0 0 7px; }
+      .brand-wrap { padding:0 8px 10px; }
+      .brand-box { padding:18px 12px 14px; }
+      .logo { font-size:42px; }
+      .sublogo { font-size:19px; margin-top:2px; }
+      .tagline { font-size:11px; letter-spacing:.02em; }
+      .ears { display:none; }
+      .menu-ribbon { font-size:20px; padding:8px 20px; margin:8px auto 12px; }
+      .menu-ribbon:before,.menu-ribbon:after { font-size:16px; }
+      .welcome-note { font-size:12px; padding:0 10px; margin:0 auto 14px; }
+      .toolbar { display:grid; gap:10px; margin:0 0 12px; }
+      .tabs { display:grid; grid-template-columns:1fr 1fr; width:100%; gap:8px; }
+      .tabs button { min-height:46px; width:100%; font-size:14px; padding:10px 7px; }
+      .month-ctrl { display:grid; grid-template-columns:1fr auto 1fr auto; width:100%; gap:6px; }
+      .month-ctrl button { min-height:42px; padding:8px 6px; }
+      #monthLabel { font-size:14px; white-space:nowrap; min-width:106px; text-align:center; }
+      .card { padding:13px 9px; border-radius:15px; min-width:0; }
+      .card-title { gap:5px; margin-bottom:11px; }
+      .card-title h2 { font-size:17px; }
+      .card-title .hint { font-size:11px; }
+      .panel-grid { gap:12px; }
+      .week-head,.calendar { gap:3px; }
+      .week-head { font-size:12px; margin-bottom:6px; }
+      .day { min-width:0; min-height:70px; border-radius:10px; padding:5px 2px; align-items:center; text-align:center; gap:3px; justify-content:flex-start; box-shadow:none; }
+      .daynum { font-size:14px; }
+      .day .date-pill { display:none; }
+      .day .mini-tags { display:none; }
+      .mobile-count { display:block; font-size:9px; color:#806459; padding:2px 3px; line-height:1.2; font-weight:700; }
+      .day.closed .mobile-count { color:#a58c84; }
+      .day.selected { outline:2px solid #946d5d; background:#f8e9df; }
+      .day.out .mobile-count { opacity:.5; }
+      .detail-list { gap:4px; }
+      .shift-row { gap:8px; padding:12px 4px; }
+      .clock { min-width:95px; }
+      .clock span { font-size:11px; }
+      .chips { gap:5px; }
+      .chip { font-size:12px; }
+      .maids { grid-template-columns:repeat(2,minmax(0,1fr)); gap:9px; }
+      .maid-card { padding:12px; min-height:75px; }
+      .maid-card strong { font-size:16px; }
+      .personday { padding:10px; align-items:flex-start; }
+      .personday .inline-actions { width:100%; justify-content:space-between; }
+      .personday .chip { white-space:normal; }
+      .note { font-size:12px; }
+      .footer { font-size:11px; }
+    }
+    @media (max-width: 360px) {
+      .day { min-height:62px; }
+      .month-ctrl { grid-template-columns:1fr auto 1fr; }
+      .month-ctrl .small { grid-column:1 / -1; }
+      .brand-box { padding:16px 10px; }
+    }
+
+    /* Floating shift detail windows: desktop centered, mobile bottom-sheet. */
+    .mofu-dialog { border:1.5px solid #b78f82; border-radius:22px; padding:0; width:min(92vw,570px); max-height:min(86dvh,800px); overflow:auto; background:#faf5ed; color:#6e4d41; box-shadow:0 24px 75px rgba(45,28,22,.28); }
+    .mofu-dialog::backdrop { background:rgba(35,24,21,.58); backdrop-filter:blur(3px); }
+    .mofu-dialog .modal-inner { padding:23px; }
+    .modal-head { display:flex; justify-content:space-between; align-items:flex-start; gap:14px; margin-bottom:14px; padding-bottom:12px; border-bottom:1px solid #e6d6cb; }
+    .modal-head h2 { margin:3px 0 4px; font-size:23px; }
+    .modal-eyebrow { font-size:10px; letter-spacing:.16em; color:#b38d7f; font-weight:700; }
+    .modal-close { flex:0 0 auto; min-width:44px; min-height:44px; border-radius:50%; font-size:19px; background:#f1e5dc; border:1px solid #d9bcad; }
+    .modal-close:focus-visible { outline:3px solid #9b7567; outline-offset:2px; }
+    .mofu-dialog .persondays { max-width:100%; }
+    @media(max-width:640px) {
+      .mofu-dialog { margin:auto auto 0; width:100%; max-width:100%; max-height:85dvh; border-radius:24px 24px 0 0; border-bottom:0; }
+      .mofu-dialog .modal-inner { padding:18px 16px max(22px,env(safe-area-inset-bottom)); }
+      .modal-head h2 { font-size:20px; }
+      .mofu-dialog .personday .inline-actions { width:100%; }
+    }
+
   </style>
 </head>
 <body>
@@ -459,31 +538,13 @@
     </div>
 
     <section id="calendarPage">
-      <div class="panel-grid">
-        <div class="card">
+      <div class="card">
           <div class="card-title">
             <h2>✦ 月曆查班</h2>
-            <span class="muted hint">點日期查看當日班次｜週三固定公休</span>
+            <span class="muted hint">點選日期，彈出當天女僕的出勤班次｜週三固定公休</span>
           </div>
-          <div class="week-head">
-            <span>日</span><span>一</span><span>二</span><span>三</span><span>四</span><span>五</span><span>六</span>
-          </div>
+          <div class="week-head"><span>日</span><span>一</span><span>二</span><span>三</span><span>四</span><span>五</span><span>六</span></div>
           <div id="calendar" class="calendar"></div>
-        </div>
-
-        <div class="card">
-          <div class="card-title">
-            <h2 id="dateTitle">當日出勤</h2>
-            <span id="dateType" class="muted hint"></span>
-          </div>
-          <div id="dayDetail" class="detail-list"></div>
-          <div class="note" style="margin-top:14px">
-            <strong>班次規則（含 2026 台灣國定假日自動判斷）</strong><br>
-            平日：早班 14:00–18:00、晚班 18:00–22:00<br>
-            假日：早班 12:00–16:00、中班 16:00–20:00、晚班 20:00–24:00<br>
-            每週三固定公休。
-          </div>
-        </div>
       </div>
     </section>
 
@@ -496,11 +557,8 @@
         <div id="maidCards" class="maids"></div>
       </div>
       <div class="card">
-        <div class="card-title">
-          <h2 id="maidTitle">女僕出勤</h2>
-          <button class="small" onclick="setTab('calendar')">返回月曆</button>
-        </div>
-        <div id="maidDetail" class="persondays"></div>
+        <div class="card-title"><h2>♡ 選擇女僕</h2><span class="muted hint">點選女僕，彈出本月出勤日</span></div>
+        <div id="maidCards" class="maids"></div>
       </div>
     </section>
 
@@ -527,6 +585,28 @@
         <div id="statusBar" class="status-bar info show" role="status">尚未連線</div>
       </div>
     </section>
+
+
+    <!-- Native dialogs: ESC, close button, backdrop click; retains keyboard focus behavior. -->
+    <dialog id="dateModal" class="mofu-dialog" aria-labelledby="dateTitle" onclick="closeOnBackdrop(event)">
+      <div class="modal-inner">
+        <div class="modal-head">
+          <div><div class="modal-eyebrow">MOFU ♡ DAILY SHIFTS</div><h2 id="dateTitle">當日出勤</h2><div id="dateType" class="muted hint"></div></div>
+          <button type="button" class="modal-close" onclick="closeModal('dateModal')" aria-label="關閉當日班表">✕</button>
+        </div>
+        <div id="dayDetail" class="detail-list"></div>
+        <div class="note" style="margin-top:14px">平日：早班 14–18、晚班 18–22<br>假日：早班 12–16、中班 16–20、晚班 20–24<br>每週三固定公休，2026 年國定假日自動判斷。</div>
+      </div>
+    </dialog>
+    <dialog id="maidModal" class="mofu-dialog" aria-labelledby="maidTitle" onclick="closeOnBackdrop(event)">
+      <div class="modal-inner">
+        <div class="modal-head">
+          <div><div class="modal-eyebrow">MOFU ♡ MAID SHIFTS</div><h2 id="maidTitle">女僕出勤</h2></div>
+          <button type="button" class="modal-close" onclick="closeModal('maidModal')" aria-label="關閉女僕出勤視窗">✕</button>
+        </div>
+        <div id="maidDetail" class="persondays"></div>
+      </div>
+    </dialog>
 
     <div class="footer">Made with ♡ for MOFU｜Google Sheet 線上出勤查詢｜班表請以店家公告為準<div id="publicSyncState" aria-live="polite" style="margin-top:8px;font-size:12px"></div></div>
   </main>
@@ -600,11 +680,20 @@
     function getShifts(dateStr){ return data.shifts.filter(x => x.date === dateStr); }
     function dateName(dateStr){ const d = parseDate(dateStr); return `${d.getMonth()+1}月${d.getDate()}日（週${weekdays[d.getDay()]}）`; }
 
-    function setTab(tab){ currentTab = tab === 'maids' ? 'maids' : 'calendar'; render(); }
-    function moveMonth(offset){ const d = new Date(year, month + offset, 1); year = d.getFullYear(); month = d.getMonth(); render(); }
-    function goToday(){ year = today.getFullYear(); month = today.getMonth(); selected = formatDate(today); render(); }
-    function chooseDate(dateStr){ const d = parseDate(dateStr); year = d.getFullYear(); month = d.getMonth(); selected = dateStr; render(); }
-    function selectMaid(name){ selectedMaid = decodeURIComponent(name); render(); }
+    function setTab(tab){ closeAllModals(); currentTab = tab === 'maids' ? 'maids' : 'calendar'; render(); }
+    function moveMonth(offset){ closeAllModals(); const d = new Date(year, month + offset, 1); year = d.getFullYear(); month = d.getMonth(); render(); }
+    function goToday(){ closeAllModals(); year = today.getFullYear(); month = today.getMonth(); selected = formatDate(today); render(); }
+    function chooseDate(dateStr){ const d = parseDate(dateStr); year = d.getFullYear(); month = d.getMonth(); selected = dateStr; render(); openModal('dateModal'); }
+    function selectMaid(name){ selectedMaid = decodeURIComponent(name); render(); openModal('maidModal'); }
+
+    function openModal(id){
+      closeAllModals();
+      const dialog = document.getElementById(id);
+      if(dialog && !dialog.open) dialog.showModal();
+    }
+    function closeModal(id){ const dialog=document.getElementById(id); if(dialog?.open) dialog.close(); }
+    function closeAllModals(){ closeModal('dateModal'); closeModal('maidModal'); }
+    function closeOnBackdrop(event){ if(event.target.tagName==='DIALOG') event.target.close(); }
 
     function render(){
       ['calendar','maids'].forEach(tab => {
@@ -643,6 +732,7 @@
             <div class="daynum">${d.getDate()}</div>
             <div class="date-pill">${calendarDayType(d)}</div>
             <div class="mini-tags">${tags}</div>
+            <span class="mobile-count">${isClosed(d) ? '公休' : names.length ? names.length + ' 位' : '－'}</span>
           </button>
         `);
       }
@@ -696,7 +786,7 @@
             const defs = getShiftDefs(parseDate(date));
             const unique = [...new Set(shiftNames)].sort((a,b)=>['早','中','晚'].indexOf(a)-['早','中','晚'].indexOf(b));
             const times = unique.map(n=>defs.find(y=>y[0]===n)?.[1] || '請確認時段');
-            return `<div class="personday"><strong>${dateName(date)}</strong><div class="inline-actions"><span class="chip">${unique.join('+')}班 · ${times.join('、')}</span><button class="small" onclick="setTab('calendar');chooseDate('${date}')">查看</button></div></div>`;
+            return `<div class="personday"><strong>${dateName(date)}</strong><div class="inline-actions"><span class="chip">${unique.join('+')}班 · ${times.join('、')}</span><button class="small" onclick="closeAllModals();setTab('calendar');chooseDate('${date}')">查看</button></div></div>`;
           }).join('')
         : '<div class="empty">目前月份沒有已登錄的出勤資料</div>';
     }
