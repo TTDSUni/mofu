@@ -510,6 +510,18 @@
       .maid-card strong { font-size:19px; }
       .welcome-note { font-size:13px; }
     }
+
+    /* Events: highlighted dates, without hiding maid shifts. */
+    .calendar-scroll .day.has-event{background:var(--event-bg,#f6e5dc);border-color:var(--event-border,#c89c8f);box-shadow:inset 0 0 0 1px var(--event-border,#c89c8f)}
+    .calendar-scroll .day.has-event.selected{outline:2px solid #765547;outline-offset:-2px}
+    .event-label{display:block;font-size:11px;line-height:1.25;color:#69463d;font-weight:800;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;background:#ffffffba;border-radius:7px;padding:3px 5px;max-width:100%}
+    .event-section{border:1px solid #ddbeb0;border-radius:15px;background:#fff6ed;padding:13px 14px;margin-bottom:16px}
+    .event-section h3{margin:0 0 10px;font-size:15px;color:#80584b}
+    .event-entry{border-left:4px solid var(--entry-accent,#ba8b7c);padding:7px 10px;margin:8px 0;background:#fffaf6;border-radius:0 9px 9px 0}
+    .event-entry strong{display:block;font-size:14px}
+    .event-entry p{margin:3px 0 0;white-space:pre-wrap;overflow-wrap:anywhere;font-size:13px;color:#765f53}
+    .event-entry small{font-size:11px;color:#997d72}
+    .event-inline-status{font-size:12px;color:#946f60;margin-top:5px}
   </style>
 </head>
 <body>
@@ -600,7 +612,7 @@
           <div><div class="modal-eyebrow">MOFU ♡ DAILY SHIFTS</div><h2 id="dateTitle">當日出勤</h2><div id="dateType" class="muted hint"></div></div>
           <button type="button" class="modal-close" onclick="closeModal('dateModal')" aria-label="關閉當日班表">✕</button>
         </div>
-        <div id="dayDetail" class="detail-list"></div>
+        <div id="dayEvents"></div><div id="dayDetail" class="detail-list"></div>
         <div class="note" style="margin-top:14px">平日：早班 14–18、晚班 18–22<br>假日：早班 12–16、中班 16–20、晚班 20–24<br>每週三固定公休，2026 年國定假日自動判斷。</div>
       </div>
     </dialog>
@@ -642,6 +654,9 @@
     let sheetSyncError = '';
     let lastSynced = null;
     let data = {maids:[],shifts:[],holidays:[]};
+    let events = [];
+    let eventSyncError = "";
+    let eventRequestCounter = 0;
 
     function formatDate(d){ return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`; }
     function parseDate(s){ return new Date(s + 'T12:00:00'); }
@@ -720,6 +735,70 @@
       renderAdmin();
     }
 
+    const EVENT_PALETTE={
+      '粉色':['#f7dce6','#ca8fa8'],
+      '奶茶':['#f4e0d0','#ba9077'],
+      '紫色':['#e9dff5','#aa92c7'],
+      '黃色':['#fff0c5','#d3ae65'],
+      '綠色':['#e2efdb','#96b08a'],
+      '藍色':['#dcecf7','#88afc9']
+    };
+    function eventsOn(date){return events.filter(e=>e.start<=date && date<=e.end);}
+    function normalizeEventDate(value){
+      const v=String(value||'').trim().replace(/年|[./]/g,'-').replace(/月/g,'-').replace(/日/g,'');
+      const m=/^(20\d\d)-(\d{1,2})-(\d{1,2})$/.exec(v);
+      if(!m)return null;
+      const y=Number(m[1]),mm=Number(m[2]),dd=Number(m[3]);
+      const d=new Date(y,mm-1,dd,12);
+      if(d.getFullYear()!==y||d.getMonth()!==mm-1||d.getDate()!==dd)return null;
+      return formatDate(d);
+    }
+    function parseEventCsv(raw){
+      const rows=parseCsv(raw);
+      if(!rows.length)return [];
+      const names=rows[0].map(x=>String(x||'').replace(/[\s\uFEFF\u00a0]/g,'').toLowerCase());
+      const col=aliases=>names.findIndex(n=>aliases.includes(n));
+      const title=col(['活動名稱','活動','名稱','title']);
+      const start=col(['開始日期','開始','起始日期','start']);
+      const end=col(['結束日期','結束','截止日期','end']);
+      const color=col(['顏色','標記顏色','color']);
+      const note=col(['備註','內容','說明','note']);
+      if(title<0||start<0)throw Error('活動分頁需要「活動名稱」和「開始日期」欄位；實際表頭：'+rows[0].join('、'));
+      const output=[];
+      for(let i=1;i<rows.length;i++){
+        const r=rows[i];
+        const name=String(r[title]||'').trim();
+        if(!name)continue;
+        const a=normalizeEventDate(r[start]);
+        const b=normalizeEventDate(end>=0 && String(r[end]||'').trim()?r[end]:r[start]);
+        if(!a||!b||b<a)throw Error(`活動分頁第 ${i+1} 行日期無效（起訖需為有效日期且結束不早於開始）`);
+        const theme=String(color>=0?r[color]||'':'').trim();
+        output.push({name,start:a,end:b,color:EVENT_PALETTE[theme]?theme:'粉色',note:String(note>=0?r[note]||'':'').trim()});
+      }
+      return output;
+    }
+    async function syncEvents(){
+      const id=++eventRequestCounter;
+      try{
+        const res=await fetch('/api/events',{cache:'no-store'});
+        if(id!==eventRequestCounter)return;
+        if(res.status===204){events=[];eventSyncError='';renderCalendar();renderDayDetail();return;}
+        if(!res.ok)throw Error(`HTTP ${res.status}: ${(await res.text()).slice(0,150)}`);
+        const parsed=parseEventCsv(await res.text());
+        if(id!==eventRequestCounter)return;
+        events=parsed;eventSyncError='';renderCalendar();renderDayDetail();
+      }catch(err){
+        if(id!==eventRequestCounter)return;
+        eventSyncError=String(err.message||err);
+        console.warn('活動同步失敗，班表仍可使用：',eventSyncError);
+      }
+    }
+    function renderDayEvents(){
+      const target=document.getElementById('dayEvents');
+      const items=eventsOn(selected);
+      target.innerHTML=items.length?`<section class="event-section"><h3>✦ 當日活動</h3>${items.map(e=>`<div class="event-entry" style="--entry-accent:${EVENT_PALETTE[e.color][1]}"><strong>🎀 ${escapeHtml(e.name)}</strong><small>${e.start===e.end?e.start:`${e.start} ～ ${e.end}`}</small>${e.note?`<p>${escapeHtml(e.note)}</p>`:''}</div>`).join('')}</section>`:'';
+    }
+
     function renderCalendar(){
       const first = new Date(year, month, 1);
       const startOffset = first.getDay();
@@ -730,6 +809,8 @@
         const d = new Date(year, month, 1 + i - startOffset);
         const s = formatDate(d);
         const shifts = getShifts(s);
+        const dayEvents=eventsOn(s);
+        const eventColors=dayEvents.length?EVENT_PALETTE[dayEvents[0].color]:null;
         const names = [...new Set(shifts.map(x => x.maid))];
         let tags = '';
         if(isClosed(d)){
@@ -741,9 +822,11 @@
           tags = '<span class="tag neutral">尚無班表</span>';
         }
         cells.push(`
-          <button class="day ${d.getMonth()!==month?'out':''} ${isClosed(d)?'closed':''} ${s===selected?'selected':''}" onclick="chooseDate('${s}')">
+          <button class="day ${dayEvents.length?'has-event':''} ${d.getMonth()!==month?'out':''} ${isClosed(d)?'closed':''} ${s===selected?'selected':''}" style="${eventColors?`--event-bg:${eventColors[0]};--event-border:${eventColors[1]}`:''}" onclick="chooseDate('${s}')">
             <div class="daynum">${d.getDate()}</div>
             <div class="date-pill">${calendarDayType(d)}</div>
+            ${dayEvents.slice(0,2).map(e=>`<span class="event-label" title="${escapeHtml(e.name)}">✦ ${escapeHtml(e.name)}</span>`).join('')}
+            ${dayEvents.length>2?`<span class="event-label">另有 ${dayEvents.length-2} 項活動</span>`:''}
             <div class="mini-tags">${tags}</div>
 
           </button>
@@ -756,6 +839,7 @@
       const d = parseDate(selected);
       const defs = getShiftDefs(d);
       const shifts = getShifts(selected);
+      renderDayEvents();
       document.getElementById('dateTitle').textContent = `${dateName(selected)} · 出勤名單`;
       document.getElementById('dateType').textContent = isClosed(d) ? '週三固定公休' : (officialHolidayName(d) ? officialHolidayName(d) + ' · 假日班制' : (isHolidayMode(d) ? '假日班制' : '平日班制'));
       if(isClosed(d)){
@@ -1001,10 +1085,11 @@
       return output;
     }
     // 每隔五分鐘重新讀取一次；頁面重新獲得焦點時也會讀取。
-    window.addEventListener('focus',()=>syncSheet());
-    setInterval(()=>syncSheet(),5*60*1000);
+    window.addEventListener('focus',()=>{syncSheet();syncEvents();});
+    setInterval(()=>{syncSheet();syncEvents();},5*60*1000);
     render();
     syncSheet();
+    syncEvents();
 
   </script>
 </body>
